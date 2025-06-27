@@ -1,4 +1,3 @@
-// === DOM SELECTORS ===
 const body = document.body;
 const themeToggle = document.getElementById("theme-toggle");
 const themeIcon = document.getElementById("theme-icon");
@@ -9,34 +8,18 @@ const itemsLeft = document.getElementById("items-left");
 const filters = document.querySelectorAll(".filter");
 const clearCompletedBtn = document.getElementById("clear-completed");
 
-const todos = [];
+let todos = [];
 
-// === INIT ===
-window.addEventListener("DOMContentLoaded", () => {
-  loadTodos();
-  renderTodos(getActiveFilter());
-});
-
-// === EVENT LISTENERS ===
-themeToggle.addEventListener("click", toggleTheme);
-todoForm.addEventListener("submit", handleNewTodo);
-clearCompletedBtn.addEventListener("click", clearCompletedTodos);
-filters.forEach(btn => {
-  btn.addEventListener("click", handleFilterClick);
-});
-
-// === FUNCTIONS ===
-
-// Handle theme toggle (light/dark)
-function toggleTheme() {
+// === THEME TOGGLE ===
+themeToggle.addEventListener("click", () => {
   const isDark = body.classList.contains("dark-theme");
   body.classList.toggle("dark-theme", !isDark);
   body.classList.toggle("light-theme", isDark);
   themeIcon.src = isDark ? "images/icon-moon.svg" : "images/icon-sun.svg";
-}
+});
 
-// Handle form submission
-function handleNewTodo(e) {
+// === ADD NEW TODO ===
+todoForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const text = todoInput.value.trim();
   if (!text) return;
@@ -44,9 +27,9 @@ function handleNewTodo(e) {
   todoInput.value = "";
   saveTodos();
   renderTodos(getActiveFilter());
-}
+});
 
-// Render todos based on filter
+// === RENDER TODOS ===
 function renderTodos(filter = "all") {
   todoList.innerHTML = "";
 
@@ -59,7 +42,7 @@ function renderTodos(filter = "all") {
   filtered.forEach((todo, index) => {
     const li = document.createElement("li");
 
-    // Custom checkbox
+    // Custom styled checkbox
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.classList.add("todo-checkbox");
@@ -70,7 +53,7 @@ function renderTodos(filter = "all") {
       renderTodos(getActiveFilter());
     });
 
-    // Text
+    // Todo text
     const span = document.createElement("span");
     span.textContent = todo.text;
     if (todo.completed) {
@@ -96,41 +79,43 @@ function renderTodos(filter = "all") {
   updateItemsLeft();
 }
 
-// Update items left count
+// === ITEMS LEFT COUNTER ===
 function updateItemsLeft() {
   const activeCount = todos.filter(todo => !todo.completed).length;
   itemsLeft.textContent = `${activeCount} item${activeCount !== 1 ? "s" : ""} left`;
 }
 
-// Clear completed todos
-function clearCompletedTodos() {
-  todos = todos.filter(todo => !todo.completed);
-  saveTodos();
-  renderTodos(getActiveFilter());
-}
+// === FILTERS ===
+filters.forEach(btn => {
+  btn.addEventListener("click", () => {
+    filters.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderTodos(btn.dataset.filter);
+  });
+});
 
-// Handle filter clicks
-function handleFilterClick(e) {
-  filters.forEach(b => b.classList.remove("active"));
-  e.target.classList.add("active");
-  renderTodos(getActiveFilter());
-}
-
-// Get current filter state
 function getActiveFilter() {
   const activeBtn = document.querySelector(".filter.active");
   return activeBtn?.dataset.filter || "all";
 }
 
-// Save todos to localStorage
+// === CLEAR COMPLETED ===
+clearCompletedBtn.addEventListener("click", () => {
+  todos = todos.filter(todo => !todo.completed);
+  saveTodos();
+  renderTodos(getActiveFilter());
+});
+
+// === LOCAL STORAGE ===
 function saveTodos() {
   localStorage.setItem("todos", JSON.stringify(todos));
 }
 
-// Load todos from localStorage
-function loadTodos() {
-  const stored = localStorage.getItem("todos");
-  if (stored) {
-    todos = JSON.parse(stored);
-  }
+// === LOAD TODOS FROM STORAGE ON START ===
+const stored = localStorage.getItem("todos");
+if (stored) {
+  todos = JSON.parse(stored);
+  renderTodos(getActiveFilter());
+} else {
+  renderTodos(); // if nothing saved yet
 }
